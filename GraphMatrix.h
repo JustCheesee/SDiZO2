@@ -3,18 +3,18 @@
 #include "MatrixNode.h"
 
 class GraphMatrix {
-    private:
+    public:
         int V, E;
         MatrixNode ** matrix;
-
-    public:
+        int** edges;
         GraphMatrix(bool, int, double, bool);
         ~GraphMatrix();
         void printMatrix();
         void readGraph(bool);
         void randomGraph(double, int, bool);
         void matrixToFile(bool);
-        void algPrim();
+        int* algPrim();
+        int* algKruskal();
 };
 
 

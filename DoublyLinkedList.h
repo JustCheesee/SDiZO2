@@ -4,10 +4,10 @@
 
 class DoublyLinkedList{
 private:
-    Node* head;
     Node* tail;
 
 public:
+    Node* head;
     int size;
     void addBeginning(int);
     void addEnd(int, int);

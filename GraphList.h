@@ -3,17 +3,17 @@
 #include "DoublyLinkedList.h"
 
 class GraphList {
-    private:
+    public:
         int V, E;
         DoublyLinkedList * array;
-
-    public:
+        int ** edges;
         GraphList(bool, int, double, bool);
         ~GraphList();
         void printList();
         void readGraph(bool);
         void randomGraph(double, int, bool);
-        void algPrim();
+        int* algPrim();
+        int* algKruskal();
 };
 
 
