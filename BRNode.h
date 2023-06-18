@@ -9,6 +9,7 @@ public:
     BRNode* right;
     BRNode* left;
     BRNode* parent;
+    BRNode* before;
     BRNode();
     ~BRNode();
 };

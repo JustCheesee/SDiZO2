@@ -121,6 +121,6 @@ void DoublyLinkedList::printList() {    //prints list in console
             cout << printing -> value << ":" << printing -> weight<< "|";
             printing = printing -> next;
         }
-        cout << "\nHead: " << head -> value << "\nTail: "<< tail -> value << "\nSize: " << size << "\n";
+        cout << "\n";
     }
 }

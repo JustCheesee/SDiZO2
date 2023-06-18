@@ -55,10 +55,6 @@ void GraphMatrix::readGraph(bool directed) {             //reading from file and
             this -> E = stoi(mySplitText[0]);
             auto** matrix1 = new MatrixNode*[stoi(mySplitText[1])];
             this -> matrix = matrix1;
-            this -> edges = new int*[E];
-            for(int i = 0; i < E; i++){
-                edges[i] = new int[3];
-            }
             for (int i = 0; i < V; i++) {
                 matrix[i] = new MatrixNode[E];
             }
@@ -71,9 +67,6 @@ void GraphMatrix::readGraph(bool directed) {             //reading from file and
             matrix[stoi(mySplitText[1])][iterator].weight = stoi(mySplitText[2]);
             if(!directed)matrix[stoi(mySplitText[1])][iterator].edge = 1;
             else matrix[stoi(mySplitText[1])][iterator].edge = -1;
-            edges[counter][0] = stoi(mySplitText[0]);
-            edges[counter][1] = stoi(mySplitText[1]);
-            edges[counter][2] = stoi(mySplitText[2]);
             counter++;
             iterator++;
         }
@@ -86,9 +79,9 @@ void GraphMatrix::randomGraph(double density, int vertexes, bool directed) {    
     if(!directed)this -> E = density * vertexes * (vertexes - 1) / 2;
     else this -> E = density * vertexes * (vertexes - 1);
     this -> V = vertexes;
-    auto** matrix1 = new MatrixNode*[V];
+    auto matrix1 = new MatrixNode*[V];
     for (int i = 0; i < V; i++) {
-        matrix[i] = new MatrixNode[E];
+        matrix1[i] = new MatrixNode[E];
     }
     this -> matrix = matrix1;
     int edges = E;
@@ -106,17 +99,32 @@ void GraphMatrix::randomGraph(double density, int vertexes, bool directed) {    
             value = uni(rng);
             int isConnected = false;
             if(vertex != i){
-                for(int j = 0; j < E; j++){
-                    if(matrix[vertex][j].edge == 1 && matrix[i][j].edge == 1){
-                        isConnected = true;
+                if(!directed){
+                    for(int j = 0; j < E; j++){
+                        if(matrix[vertex][j].edge == 1 && matrix[i][j].edge == 1){
+                            isConnected = true;
+                        }
+                    }
+                    if(!isConnected){
+                        matrix[i][i].edge = 1;
+                        matrix[i][i].weight = value;
+                        matrix[vertex][i].edge = 1;
+                        matrix[vertex][i].weight = value;
+                        currentColumn++;
+                        break;
                     }
                 }
-                if(!isConnected){
+                else{
                     matrix[i][i].edge = 1;
                     matrix[i][i].weight = value;
-                    if(!directed)matrix[vertex][i].edge = 1;
-                    else matrix[vertex][i].edge = -1;
-                    matrix[vertex][i].weight = value;
+                    if(i == V - 1){
+                        matrix[0][i].edge = -1;
+                        matrix[0][i].weight = value;
+                    }
+                    else{
+                        matrix[i+1][i].edge = -1;
+                        matrix[i+1][i].weight = value;
+                    }
                     currentColumn++;
                     break;
                 }
@@ -217,8 +225,13 @@ int * GraphMatrix::algPrim() {
     return parentM;
 }
 
-int *GraphMatrix::algKruskal() {
+int** GraphMatrix::algKruskal() {
     DSU dsu(V);
+    int** parent = new int*[V];
+    for(int i = 0; i < V; i++){
+        parent[i] = new int[2];
+    }
+    int ** edges = getEdges();
     for(int i = 0; i < E - 1; i++){
         for(int j = 0; j < E - i - 1; j++){
             if(edges[j][2] > edges[j + 1][2]){
@@ -229,6 +242,7 @@ int *GraphMatrix::algKruskal() {
         }
     }
 
+    int counter = 0;
     int minWeight = 0;
     for(int i = 0; i < E; i++){
         int u = edges[i][0];
@@ -238,10 +252,113 @@ int *GraphMatrix::algKruskal() {
         if(dsu.find(u) != dsu.find(v)){
             dsu.unite(u, v);
             minWeight += w;
+            parent[counter][0] = u;
+            parent[counter][1] = v;
+            counter++;
         }
     }
-    cout << minWeight;
-    return nullptr;
+    return parent;
+}
+
+BRNode *GraphMatrix::algDijstra(int start) {
+    BRTree queue;
+    auto* solution = new BRNode[V];
+    for(int i = 0; i < V; i++){
+        auto * node = new BRNode;
+        if(i == start) node -> key = 0;
+        else  node -> key = numeric_limits<int>::max();
+        node -> vertex = i;
+        queue.BRinsert(node);
+    }
+    while(queue.root != nullptr){
+        auto min = queue.treeMin(queue.root);
+        for(int i = 0; i < E; i++){
+            if(matrix[min -> vertex][i].edge != 1)continue;
+            auto v = matrix[min -> vertex][i];
+            int vertex;
+            for(int j = 0; j < V; j++){
+                if(j != min -> vertex && matrix[j][i].edge == -1) vertex = j;
+            }
+            auto vv = queue.find(queue.root, vertex);
+            if(vv && vv -> key > min -> key + v.weight){
+                vv -> key = min -> key + v.weight;
+                auto * node = new BRNode;
+                node -> key = vv -> key;
+                node -> vertex = vv -> vertex;
+                node -> before = new BRNode;
+                node -> before -> vertex = min -> vertex;
+                queue.BRremove(vv);
+                queue.BRinsert(node);
+            }
+        }
+        solution[min -> vertex] = *min;
+        queue.BRremove(min);
+    }
+    return solution;
+}
+
+BRNode *GraphMatrix::algBelFord(int start) {
+    BRTree queue;
+    auto* solution = new BRNode[V];
+    for(int i = 0; i < V; i++){
+        auto * node = new BRNode;
+        if(i == start) node -> key = 0;
+        else  node -> key = numeric_limits<int>::max() - 2000;
+        node -> vertex = i;
+        queue.BRinsert(node);
+    }
+    solution[start].vertex = start;
+    solution[start].key = 0;
+    for(int i = 0; i <= V - 1; i++){
+        for(int j = 0; j < E; j++){
+            BRNode* vv;
+            BRNode* vy;
+            MatrixNode v;
+            for(int k = 0; k < V; k++){
+                if(matrix[k][j].edge == 0) continue;
+                if(matrix[k][j].edge == -1){
+                    vv = queue.find(queue.root, k);
+                    v = matrix[k][j];
+                }
+                if(matrix[k][j].edge == 1) vy = queue.find(queue.root, k);
+            }
+            if(vv && vy && vv -> key > vy -> key + v.weight){
+                vv -> key = vy -> key + v.weight;
+                auto * node = new BRNode;
+                node -> key = vv -> key;
+                node -> vertex = vv -> vertex;
+                node -> before = new BRNode;
+                node -> before -> vertex = vy -> vertex;
+                solution[node -> vertex] = *node;
+                queue.BRremove(vv);
+                queue.BRinsert(node);
+            }
+        }
+    }
+    return solution;
+}
+
+int **GraphMatrix::getEdges() {
+    int ** edges = new int*[E];
+    for(int i = 0; i < E; i++){
+        edges[i] = new int[3];
+    }
+
+    for(int i = 0; i < E; i++){
+        bool first = true;
+        for(int j = 0; j < V; j++){
+            if(matrix[j][i].edge == 1 && first){
+                edges[i][0] = j;
+                first = false;
+                continue;
+            }
+            if(matrix[j][i].edge == 1){
+                edges[i][1] = j;
+                edges[i][2] = matrix[j][i].weight;
+            }
+        }
+    }
+    return edges;
 }
 
 

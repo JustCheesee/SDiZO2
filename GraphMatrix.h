@@ -6,15 +6,17 @@ class GraphMatrix {
     public:
         int V, E;
         MatrixNode ** matrix;
-        int** edges;
         GraphMatrix(bool, int, double, bool);
         ~GraphMatrix();
         void printMatrix();
         void readGraph(bool);
         void randomGraph(double, int, bool);
+        int ** getEdges();
         void matrixToFile(bool);
         int* algPrim();
-        int* algKruskal();
+        int** algKruskal();
+        BRNode* algDijstra(int);
+        BRNode* algBelFord(int);
 };
 
 
