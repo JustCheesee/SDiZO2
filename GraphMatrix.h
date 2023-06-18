@@ -1,6 +1,7 @@
 #ifndef SDIZO2_GRAPHMATRIX_H
 #define SDIZO2_GRAPHMATRIX_H
 #include "MatrixNode.h"
+#include "BRNode.h"
 
 class GraphMatrix {
     public:

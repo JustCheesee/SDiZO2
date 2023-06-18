@@ -12,12 +12,12 @@ DSU::DSU(int number){
 
 DSU::~DSU() = default;
 
-int DSU::find(int vertex){
+int DSU::find(int vertex){                                  //find vertex in dsu
     if (parent[vertex] == -1) return vertex;
     return parent[vertex] = find(parent[vertex]);
 }
 
-void DSU::unite(int first, int second){
+void DSU::unite(int first, int second){                     //connect the trees
     int u = find(first);
     int v = find(second);
 

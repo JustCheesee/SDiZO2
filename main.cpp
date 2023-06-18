@@ -144,9 +144,7 @@ int main(){
                     break;
                 case 2: {
                     int who;
-                    cout << "fjnie";
                     system("CLS");
-                    cout << "fjnie";
                     cout << "1. Wczytaj dane z pliku (graf nieskierowany)" << endl;
                     cout << "2. Wczytaj dane z pliku (graf skierowany)" << endl;
                     cout << "3. Wygeneruj graf losowo (graf nieskierowany)" << endl;
@@ -209,6 +207,7 @@ int main(){
                         }
                             break;
                         case 7: {
+                            system ("CLS");
                             int **final = graphMatrix->algKruskal();
                             int minWeight = 0;
                             for (int i = 0; i < graphMatrix->V - 1; i++) {

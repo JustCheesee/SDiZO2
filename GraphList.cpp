@@ -8,11 +8,12 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <random>
 #include <vector>
 using namespace std;
 
 GraphList::GraphList(bool file, int vertexes, double density, bool directed) {    //Constructor creating list representation of graph.
-    this -> V = 0;                                                                               //Its depending on bool file (read from file or random).
+    this -> V = 0;                                                                  //Its depending on bool file (read from file or random).
     this -> E = 0;
     this -> array = new DoublyLinkedList[0];
     if(file){
@@ -128,7 +129,7 @@ void GraphList::randomGraph(double density, int vertexes, bool directed) {     /
 int*GraphList::algPrim() {
     BRTree queue;
     int* parent = new int[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                         //initiate vertexes to infinity (max int)
         auto * node = new BRNode;
         if(i == 0) node -> key = 0;
         else  node -> key = numeric_limits<int>::max();
@@ -140,7 +141,7 @@ int*GraphList::algPrim() {
         auto min = queue.treeMin(queue.root);
         auto v = array[min -> vertex].head;
         for(int i = 0; i < array[min -> vertex].size; i++){
-            auto vv = queue.find(queue.root, v->value);
+            auto vv = queue.find(queue.root, v->value); //relax edges
             if(vv && v -> weight < vv -> key){
                 parent[vv -> vertex] = min -> vertex;
                 vv -> key = v -> weight;
@@ -158,14 +159,14 @@ int*GraphList::algPrim() {
 }
 
 int** GraphList::algKruskal() {
-    DSU dsu(V);
+    DSU dsu(V);             //initiate dsu
     int** parent = new int*[V];
     for(int i = 0; i < V; i++){
         parent[i] = new int[2];
     }
-    int ** edges = getEdges();
+    int ** edges = getEdges();      //get graph edges
     for(int i = 0; i < E - 1; i++){
-        for(int j = 0; j < E - i - 1; j++){
+        for(int j = 0; j < E - i - 1; j++){     //Bubble Sort the edges
             if(edges[j][2] > edges[j + 1][2]){
                 int* tmp = edges[j];
                 edges[j] = edges[j + 1];
@@ -180,7 +181,7 @@ int** GraphList::algKruskal() {
         int u = edges[i][0];
         int v = edges[i][1];
         int w = edges[i][2];
-        if(dsu.find(u) != dsu.find(v)){
+        if(dsu.find(u) != dsu.find(v)){     //if vertexes not connected - unite them
             dsu.unite(u, v);
             minWeight += w;
             parent[counter][0] = u;
@@ -194,7 +195,7 @@ int** GraphList::algKruskal() {
 BRNode* GraphList::algDijstra(int start) {
     BRTree queue;
     auto* solution = new BRNode[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                             //set vertexes to infinity (max int)
         auto * node = new BRNode;
         if(i == start) node -> key = 0;
         else  node -> key = numeric_limits<int>::max();
@@ -205,7 +206,7 @@ BRNode* GraphList::algDijstra(int start) {
         auto min = queue.treeMin(queue.root);
         auto v = array[min -> vertex].head;
         for(int i = 0; i < array[min -> vertex].size; i++){
-            auto vv = queue.find(queue.root, v -> value);
+            auto vv = queue.find(queue.root, v -> value);   //relax edges
             if(vv && vv -> key > min -> key + v -> weight){
                 vv -> key = min -> key + v -> weight;
                 auto * node = new BRNode;
@@ -227,7 +228,7 @@ BRNode* GraphList::algDijstra(int start) {
 BRNode *GraphList::algBelFord(int start) {
     BRTree queue;
     auto* solution = new BRNode[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                                 //set vertexes to infinity
         auto * node = new BRNode;
         if(i == start) node -> key = 0;
         else  node -> key = numeric_limits<int>::max() - 2000;
@@ -236,7 +237,7 @@ BRNode *GraphList::algBelFord(int start) {
     }
     solution[start].vertex = start;
     solution[start].key = 0;
-    for(int i = 0; i <= V - 1; i++){
+    for(int i = 0; i <= V - 1; i++){                        //loop V times over each edge
         int hop = 0;
         auto v = array[hop].head;
         for(int j = 0; j < E; j++){
@@ -245,7 +246,7 @@ BRNode *GraphList::algBelFord(int start) {
                 v = array[hop].head;
             }
             auto vv = queue.find(queue.root, v -> value);
-            auto vy = queue.find(queue.root, hop);
+            auto vy = queue.find(queue.root, hop);          //relax edges
             if(vv && vy && vv -> key > vy -> key + v -> weight){
                 vv -> key = vy -> key + v -> weight;
                 auto * node = new BRNode;
@@ -263,7 +264,7 @@ BRNode *GraphList::algBelFord(int start) {
     return solution;
 }
 
-int **GraphList::getEdges() {
+int **GraphList::getEdges() {       //function loop over list and retrieves all edges of graph
     int ** edges = new int*[E];
     for(int i = 0; i < E; i++){
         edges[i] = new int[3];

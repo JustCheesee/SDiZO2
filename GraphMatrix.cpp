@@ -1,10 +1,13 @@
 #include "GraphMatrix.h"
 #include "MatrixNode.cpp"
+#include "BRTree.h"
+#include "DSU.h"
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <synchapi.h>
+#include <random>
 
 using namespace std;
 static int * parentM;
@@ -156,7 +159,7 @@ void GraphMatrix::randomGraph(double density, int vertexes, bool directed) {    
     }
 }
 
-void GraphMatrix::matrixToFile(bool directed) {
+void GraphMatrix::matrixToFile(bool directed) {     //function to export the graph to a file
     ofstream file;
     file.open("graphOutput.txt");
     file << E << " " << V << endl;
@@ -192,7 +195,7 @@ void GraphMatrix::matrixToFile(bool directed) {
 int * GraphMatrix::algPrim() {
     BRTree queue;
     parentM = new int[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                     //initiate all vertexes to infinity
         auto * node = new BRNode;
         if(i == 0) node -> key = 0;
         else  node -> key = numeric_limits<int>::max();
@@ -210,7 +213,7 @@ int * GraphMatrix::algPrim() {
                 if(j != min -> vertex && matrix[j][i].edge != 0) vertex = j;
             }
             auto vv = queue.find(queue.root, vertex);
-            if(vv && v.weight < vv -> key){
+            if(vv && v.weight < vv -> key){                                  //relax edges
                 parentM[vv -> vertex] = min -> vertex;
                 vv -> key = v.weight;
                 auto * node = new BRNode;
@@ -231,7 +234,7 @@ int** GraphMatrix::algKruskal() {
     for(int i = 0; i < V; i++){
         parent[i] = new int[2];
     }
-    int ** edges = getEdges();
+    int ** edges = getEdges();                          //Bubble Sort all edges
     for(int i = 0; i < E - 1; i++){
         for(int j = 0; j < E - i - 1; j++){
             if(edges[j][2] > edges[j + 1][2]){
@@ -249,7 +252,7 @@ int** GraphMatrix::algKruskal() {
         int v = edges[i][1];
         int w = edges[i][2];
 
-        if(dsu.find(u) != dsu.find(v)){
+        if(dsu.find(u) != dsu.find(v)){             //unite the trees if edges are in different trees
             dsu.unite(u, v);
             minWeight += w;
             parent[counter][0] = u;
@@ -263,7 +266,7 @@ int** GraphMatrix::algKruskal() {
 BRNode *GraphMatrix::algDijstra(int start) {
     BRTree queue;
     auto* solution = new BRNode[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                             //initiate all vertexes to infinity
         auto * node = new BRNode;
         if(i == start) node -> key = 0;
         else  node -> key = numeric_limits<int>::max();
@@ -271,7 +274,7 @@ BRNode *GraphMatrix::algDijstra(int start) {
         queue.BRinsert(node);
     }
     while(queue.root != nullptr){
-        auto min = queue.treeMin(queue.root);
+        auto min = queue.treeMin(queue.root);       //extract min form queue
         for(int i = 0; i < E; i++){
             if(matrix[min -> vertex][i].edge != 1)continue;
             auto v = matrix[min -> vertex][i];
@@ -280,7 +283,7 @@ BRNode *GraphMatrix::algDijstra(int start) {
                 if(j != min -> vertex && matrix[j][i].edge == -1) vertex = j;
             }
             auto vv = queue.find(queue.root, vertex);
-            if(vv && vv -> key > min -> key + v.weight){
+            if(vv && vv -> key > min -> key + v.weight){                //relax edges
                 vv -> key = min -> key + v.weight;
                 auto * node = new BRNode;
                 node -> key = vv -> key;
@@ -300,7 +303,7 @@ BRNode *GraphMatrix::algDijstra(int start) {
 BRNode *GraphMatrix::algBelFord(int start) {
     BRTree queue;
     auto* solution = new BRNode[V];
-    for(int i = 0; i < V; i++){
+    for(int i = 0; i < V; i++){                                             //set all vertexes to infinity
         auto * node = new BRNode;
         if(i == start) node -> key = 0;
         else  node -> key = numeric_limits<int>::max() - 2000;
@@ -309,7 +312,7 @@ BRNode *GraphMatrix::algBelFord(int start) {
     }
     solution[start].vertex = start;
     solution[start].key = 0;
-    for(int i = 0; i <= V - 1; i++){
+    for(int i = 0; i <= V - 1; i++){                                    //relax all edges VE times
         for(int j = 0; j < E; j++){
             BRNode* vv;
             BRNode* vy;
@@ -338,7 +341,7 @@ BRNode *GraphMatrix::algBelFord(int start) {
     return solution;
 }
 
-int **GraphMatrix::getEdges() {
+int **GraphMatrix::getEdges() {                 //function to retrieve edges of graph
     int ** edges = new int*[E];
     for(int i = 0; i < E; i++){
         edges[i] = new int[3];
